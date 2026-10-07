@@ -10,8 +10,18 @@
     "Segoe UI",
     sans-serif;
 
-  color: #171717;
-  background: #f6f5f2;
+  --color-brand-orange: #f25c05;
+  --color-brand-orange-hover: #dc5202;
+  --color-sidebar-bg: #111111;
+  --color-sidebar-border: #1f1f1f;
+  --color-app-bg: #f8f7f4;
+  --color-surface: #ffffff;
+  --color-border-subtle: #e7e5e1;
+  --color-text-primary: #171717;
+  --color-text-muted: #737373;
+
+  color: var(--color-text-primary);
+  background: var(--color-app-bg);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
