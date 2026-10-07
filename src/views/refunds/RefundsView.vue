@@ -235,10 +235,11 @@
 
         <!-- Payment ID -->
         <div>
-          <label class="block font-medium text-neutral-700 mb-1">
+          <label for="refund-payment-id" class="block font-medium text-neutral-700 mb-1">
             Payment ID <span class="text-red-500">*</span>
           </label>
           <input
+            id="refund-payment-id"
             v-model.number="refundForm.payment_id"
             type="number"
             min="1"
@@ -254,10 +255,11 @@
 
         <!-- Amount (Optional) -->
         <div>
-          <label class="block font-medium text-neutral-700 mb-1">
+          <label for="refund-amount" class="block font-medium text-neutral-700 mb-1">
             Refund Amount (IDR) <span class="text-neutral-400 font-normal">(optional, leave blank for full refund)</span>
           </label>
           <input
+            id="refund-amount"
             v-model.number="refundForm.amount"
             type="number"
             min="1"
@@ -272,10 +274,11 @@
 
         <!-- Reason -->
         <div>
-          <label class="block font-medium text-neutral-700 mb-1">
+          <label for="refund-reason" class="block font-medium text-neutral-700 mb-1">
             Reason / Operational Notes
           </label>
           <input
+            id="refund-reason"
             v-model="refundForm.reason"
             type="text"
             maxlength="100"

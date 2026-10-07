@@ -147,10 +147,11 @@
 
         <!-- Name -->
         <div>
-          <label class="block font-medium text-neutral-700 mb-1">
+          <label for="cat-name" class="block font-medium text-neutral-700 mb-1">
             Category Name <span class="text-red-500">*</span>
           </label>
           <input
+            id="cat-name"
             v-model="categoryForm.name"
             type="text"
             required
@@ -166,10 +167,11 @@
 
         <!-- Slug -->
         <div>
-          <label class="block font-medium text-neutral-700 mb-1">
+          <label for="cat-slug" class="block font-medium text-neutral-700 mb-1">
             Slug <span class="text-neutral-400 font-normal">(optional, auto-generated if blank)</span>
           </label>
           <input
+            id="cat-slug"
             v-model="categoryForm.slug"
             type="text"
             maxlength="120"
@@ -184,8 +186,9 @@
 
         <!-- Description -->
         <div>
-          <label class="block font-medium text-neutral-700 mb-1">Description</label>
+          <label for="cat-description" class="block font-medium text-neutral-700 mb-1">Description</label>
           <textarea
+            id="cat-description"
             v-model="categoryForm.description"
             rows="2"
             placeholder="Brief description of this facility category..."
@@ -196,8 +199,9 @@
         <!-- Icon & Sort Order -->
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block font-medium text-neutral-700 mb-1">Icon Identifier</label>
+            <label for="cat-icon" class="block font-medium text-neutral-700 mb-1">Icon Identifier</label>
             <input
+              id="cat-icon"
               v-model="categoryForm.icon"
               type="text"
               maxlength="100"
@@ -207,8 +211,9 @@
           </div>
 
           <div>
-            <label class="block font-medium text-neutral-700 mb-1">Sort Order</label>
+            <label for="cat-sort-order" class="block font-medium text-neutral-700 mb-1">Sort Order</label>
             <input
+              id="cat-sort-order"
               v-model.number="categoryForm.sort_order"
               type="number"
               min="0"

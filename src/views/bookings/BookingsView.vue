@@ -16,11 +16,14 @@
     <div class="bg-white border border-[#e7e5e1] rounded-lg p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
       <!-- Search Input -->
       <div class="w-full sm:w-72 relative">
+        <label for="booking-search-input" class="sr-only">Search by booking code</label>
         <input
+          id="booking-search-input"
           v-model="filters.booking_code"
           @keyup.enter="handleSearch"
           type="text"
           placeholder="Search by booking code..."
+          aria-label="Search by booking code"
           class="w-full text-xs font-mono pl-8 pr-3 py-1.5 border border-neutral-300 rounded-md focus:outline-none focus:border-[#f25c05] focus:ring-1 focus:ring-[#f25c05]"
         />
         <svg class="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -12,11 +12,14 @@
     <div class="bg-white border border-[#e7e5e1] rounded-lg p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
       <!-- Search Input -->
       <div class="w-full sm:w-72 relative">
+        <label for="users-search-input" class="sr-only">Search by name or email</label>
         <input
+          id="users-search-input"
           v-model="filters.search"
           @keyup.enter="handleSearch"
           type="text"
           placeholder="Search by name or email..."
+          aria-label="Search by name or email"
           class="w-full text-xs pl-8 pr-3 py-1.5 border border-neutral-300 rounded-md focus:outline-none focus:border-[#f25c05] focus:ring-1 focus:ring-[#f25c05]"
         />
         <svg class="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -254,8 +257,9 @@
 
         <!-- Name Field -->
         <div>
-          <label class="block font-medium text-neutral-700 mb-1">Full Name</label>
+          <label for="edit-user-name" class="block font-medium text-neutral-700 mb-1">Full Name</label>
           <input
+            id="edit-user-name"
             v-model="editForm.name"
             type="text"
             required
@@ -270,8 +274,9 @@
 
         <!-- Email Field -->
         <div>
-          <label class="block font-medium text-neutral-700 mb-1">Email Address</label>
+          <label for="edit-user-email" class="block font-medium text-neutral-700 mb-1">Email Address</label>
           <input
+            id="edit-user-email"
             v-model="editForm.email"
             type="email"
             required
@@ -286,8 +291,9 @@
 
         <!-- Role Select -->
         <div>
-          <label class="block font-medium text-neutral-700 mb-1">Assigned Role</label>
+          <label for="edit-user-role" class="block font-medium text-neutral-700 mb-1">Assigned Role</label>
           <select
+            id="edit-user-role"
             v-model="editForm.role_id"
             class="w-full text-xs px-3 py-1.5 border border-neutral-300 rounded-md focus:outline-none focus:border-[#f25c05] bg-white text-neutral-800"
             :class="{ 'border-red-400': validationErrors.role_id }"

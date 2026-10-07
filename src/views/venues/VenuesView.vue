@@ -16,11 +16,14 @@
     <div class="bg-white border border-[#e7e5e1] rounded-lg p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
       <!-- Search Input -->
       <div class="w-full sm:w-72 relative">
+        <label for="venue-search-input" class="sr-only">Search by venue name or city</label>
         <input
+          id="venue-search-input"
           v-model="filters.search"
           @keyup.enter="handleSearch"
           type="text"
           placeholder="Search by venue name or city..."
+          aria-label="Search by venue name or city"
           class="w-full text-xs pl-8 pr-3 py-1.5 border border-neutral-300 rounded-md focus:outline-none focus:border-[#f25c05] focus:ring-1 focus:ring-[#f25c05]"
         />
         <svg class="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

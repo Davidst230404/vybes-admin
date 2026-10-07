@@ -19,6 +19,7 @@
       <button
         @click="$emit('change-page', meta.current_page - 1)"
         :disabled="meta.current_page <= 1 || disabled"
+        aria-label="Previous page"
         class="px-2.5 py-1 border border-neutral-200 rounded-md hover:bg-neutral-50 disabled:opacity-40 disabled:hover:bg-white text-neutral-700 transition-colors font-medium flex items-center space-x-1"
         type="button"
       >
@@ -35,6 +36,7 @@
       <button
         @click="$emit('change-page', meta.current_page + 1)"
         :disabled="meta.current_page >= meta.last_page || disabled"
+        aria-label="Next page"
         class="px-2.5 py-1 border border-neutral-200 rounded-md hover:bg-neutral-50 disabled:opacity-40 disabled:hover:bg-white text-neutral-700 transition-colors font-medium flex items-center space-x-1"
         type="button"
       >

@@ -23,13 +23,21 @@
       </div>
     </div>
 
-    <!-- Feedback Banner -->
+    <!-- Feedback Banners -->
     <div
       v-if="actionSuccessMessage"
       class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs flex items-center justify-between"
     >
       <span>{{ actionSuccessMessage }}</span>
       <button @click="actionSuccessMessage = null" class="text-emerald-600 hover:text-emerald-900 font-bold ml-2">×</button>
+    </div>
+
+    <div
+      v-if="actionErrorMessage"
+      class="p-3 bg-red-50 border border-red-200 text-red-800 rounded-lg text-xs flex items-center justify-between"
+    >
+      <span>{{ actionErrorMessage }}</span>
+      <button @click="actionErrorMessage = null" class="text-red-600 hover:text-red-900 font-bold ml-2">×</button>
     </div>
 
     <!-- Error State -->
@@ -234,6 +242,7 @@ const organizers = ref([])
 const isLoading = ref(true)
 const error = ref(null)
 const actionSuccessMessage = ref(null)
+const actionErrorMessage = ref(null)
 
 // Confirmation Modal State
 const confirmModalOpen = ref(false)
@@ -287,6 +296,8 @@ function promptAction(type, item, targetStatus) {
 
 async function executeAction() {
   isSubmitting.value = true
+  actionErrorMessage.value = null
+  actionSuccessMessage.value = null
   try {
     if (confirmDialog.type === 'merchant') {
       const res = await approvalService.updateMerchant(confirmDialog.target.id, confirmDialog.status)
@@ -299,7 +310,8 @@ async function executeAction() {
     confirmModalOpen.value = false
     await fetchApprovals()
   } catch (err) {
-    alert(err.response?.data?.message || 'Failed to update application status.')
+    actionErrorMessage.value = err.message || err.response?.data?.message || 'Failed to update application status.'
+    confirmModalOpen.value = false
   } finally {
     isSubmitting.value = false
   }

@@ -5,6 +5,7 @@
       class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto"
       role="dialog"
       aria-modal="true"
+      @click="handleBackdropClick"
     >
       <div
         class="bg-white rounded-lg border border-[#e7e5e1] shadow-xl w-full max-w-lg overflow-hidden transform transition-all"
@@ -42,7 +43,9 @@
 </template>
 
 <script setup>
-defineProps({
+import { onMounted, onUnmounted, watch } from 'vue'
+
+const props = defineProps({
   isOpen: {
     type: Boolean,
     default: false,
@@ -51,7 +54,44 @@ defineProps({
     type: String,
     default: '',
   },
+  closeOnBackdrop: {
+    type: Boolean,
+    default: true,
+  },
 })
 
-defineEmits(['close'])
+const emit = defineEmits(['close'])
+
+function handleBackdropClick() {
+  if (props.closeOnBackdrop) {
+    emit('close')
+  }
+}
+
+function handleKeyDown(event) {
+  if (event.key === 'Escape' && props.isOpen) {
+    emit('close')
+  }
+}
+
+watch(
+  () => props.isOpen,
+  (val) => {
+    if (val) {
+      document.addEventListener('keydown', handleKeyDown)
+    } else {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }
+)
+
+onMounted(() => {
+  if (props.isOpen) {
+    document.addEventListener('keydown', handleKeyDown)
+  }
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeyDown)
+})
 </script>

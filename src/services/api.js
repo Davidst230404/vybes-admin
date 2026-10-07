@@ -43,6 +43,8 @@ export function normalizeApiError(error) {
     isForbidden: status === 403,
     isNotFound: status === 404,
     isServerError: status >= 500,
+    response: error.response,
+    data,
     original: error,
   }
 }
