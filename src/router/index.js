@@ -5,8 +5,16 @@ import AdminLayout from '../layouts/AdminLayout.vue'
 const routes = [
   {
     path: '/',
+    redirect: '/admin/dashboard',
+  },
+  {
+    path: '/dashboard',
+    redirect: '/admin/dashboard',
+  },
+  {
+    path: '/admin',
     component: AdminLayout,
-    redirect: '/dashboard',
+    redirect: '/admin/dashboard',
     meta: {
       requiresAuth: true,
     },
@@ -22,6 +30,12 @@ const routes = [
         name: 'users',
         component: () => import('../views/users/UsersView.vue'),
         meta: { title: 'Users Management' },
+      },
+      {
+        path: 'users/:id',
+        name: 'user-detail',
+        component: () => import('../views/users/UserDetailView.vue'),
+        meta: { title: 'User Account Details' },
       },
       {
         path: 'approvals',
@@ -45,7 +59,7 @@ const routes = [
         path: 'bookings',
         name: 'bookings',
         component: () => import('../views/bookings/BookingsView.vue'),
-        meta: { title: 'Platform Bookings' },
+        meta: { title: 'Platform Bookings Supervision' },
       },
       {
         path: 'refunds',
@@ -85,6 +99,20 @@ const routes = [
       },
     ],
   },
+  // Backward compatibility aliases
+  { path: '/users', redirect: '/admin/users' },
+  { path: '/approvals', redirect: '/admin/approvals' },
+  { path: '/categories', redirect: '/admin/categories' },
+  { path: '/moderation', redirect: '/admin/moderation' },
+  { path: '/bookings', redirect: '/admin/bookings' },
+  { path: '/refunds', redirect: '/admin/refunds' },
+  { path: '/reviews', redirect: '/admin/reviews' },
+  { path: '/venues', redirect: '/admin/venues' },
+  { path: '/settings', redirect: '/admin/settings' },
+  { path: '/audit', redirect: '/admin/audit' },
+  { path: '/reports', redirect: '/admin/reports' },
+
+  // Auth routes
   {
     path: '/auth/login',
     name: 'login',

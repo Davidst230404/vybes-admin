@@ -57,6 +57,7 @@ const isLoggingOut = ref(false)
 const titles = {
   dashboard: 'Dashboard Overview',
   users: 'Users Management',
+  'user-detail': 'User Account Details',
   approvals: 'Merchant & Organizer Approvals',
   categories: 'Categories Management',
   moderation: 'Content Moderation',
