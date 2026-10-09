@@ -115,6 +115,7 @@ const routes = [
   // Auth routes
   {
     path: '/auth/login',
+    alias: '/login',
     name: 'login',
     component: () => import('../views/auth/LoginView.vue'),
     meta: {
@@ -123,6 +124,7 @@ const routes = [
   },
   {
     path: '/auth/session-expired',
+    alias: '/session-expired',
     name: 'session-expired',
     component: () => import('../views/auth/SessionExpiredView.vue'),
     meta: {
@@ -131,6 +133,7 @@ const routes = [
   },
   {
     path: '/auth/forgot-password',
+    alias: '/forgot-password',
     name: 'forgot-password',
     component: () => import('../views/auth/ForgotPasswordView.vue'),
     meta: {
@@ -139,6 +142,7 @@ const routes = [
   },
   {
     path: '/auth/access-denied',
+    alias: '/access-denied',
     name: 'access-denied',
     component: () => import('../views/auth/AccessDeniedView.vue'),
   },
