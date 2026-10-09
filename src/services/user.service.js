@@ -32,11 +32,35 @@ export const userService = {
    * Update user details and role.
    *
    * @param {number|string} id
-   * @param {{ name?: string, email?: string, role_id?: number }} payload
+   * @param {{ name?: string, email?: string, role_id?: number, phone?: string, status?: string }} payload
    * @returns {Promise<object>}
    */
   async update(id, payload) {
     const response = await api.patch(`/admin/users/${id}`, payload)
+    return response.data
+  },
+
+  /**
+   * Suspend a user account.
+   *
+   * @param {number|string} id
+   * @param {string} [reason]
+   * @returns {Promise<object>}
+   */
+  async suspend(id, reason = '') {
+    const response = await api.post(`/admin/users/${id}/suspend`, { reason })
+    return response.data
+  },
+
+  /**
+   * Reactivate a suspended user account.
+   *
+   * @param {number|string} id
+   * @param {string} [reason]
+   * @returns {Promise<object>}
+   */
+  async reactivate(id, reason = '') {
+    const response = await api.post(`/admin/users/${id}/reactivate`, { reason })
     return response.data
   },
 }

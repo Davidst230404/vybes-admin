@@ -1,478 +1,459 @@
 <template>
-  <div class="space-y-5">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <div>
-        <h2 class="text-xl font-bold text-neutral-900 tracking-tight">Users Management</h2>
-        <p class="text-xs text-neutral-500 mt-0.5">Manage registered accounts and role assignments across VYBES platform</p>
-      </div>
-    </div>
-
-    <!-- Filter Bar -->
-    <div class="bg-white border border-[#e7e5e1] rounded-lg p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
-      <!-- Search Input -->
-      <div class="w-full sm:w-72 relative">
-        <label for="users-search-input" class="sr-only">Search by name or email</label>
-        <input
-          id="users-search-input"
-          v-model="filters.search"
-          @keyup.enter="handleSearch"
-          type="text"
-          placeholder="Search by name or email..."
-          aria-label="Search by name or email"
-          class="w-full text-xs pl-8 pr-3 py-1.5 border border-neutral-300 rounded-md focus:outline-none focus:border-[#f25c05] focus:ring-1 focus:ring-[#f25c05]"
-        />
-        <svg class="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      </div>
-
-      <!-- Filters & Actions -->
-      <div class="w-full sm:w-auto flex items-center justify-end space-x-2.5">
-        <label for="user-role-filter" class="sr-only">Filter by Role</label>
-        <select
-          id="user-role-filter"
-          v-model="filters.role"
-          @change="handleSearch"
-          class="text-xs border border-neutral-300 rounded-md px-2.5 py-1.5 focus:outline-none focus:border-[#f25c05] bg-white text-neutral-700"
-        >
-          <option value="">All Roles</option>
-          <option value="customer">Customer</option>
-          <option value="merchant">Merchant</option>
-          <option value="organizer">Event Organizer</option>
-          <option value="admin">Administrator</option>
-        </select>
-
-        <button
-          @click="handleSearch"
-          type="button"
-          class="px-3 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium rounded-md transition-colors"
-        >
-          Filter
-        </button>
-
-        <button
-          v-if="filters.search || filters.role"
-          @click="resetFilters"
-          type="button"
-          class="px-2.5 py-1.5 text-neutral-500 hover:text-neutral-700 text-xs font-medium"
-        >
-          Reset
-        </button>
-      </div>
-    </div>
-
-    <!-- Error State -->
-    <ErrorState
-      v-if="error"
-      title="Failed to load users"
-      :message="error"
-      @retry="fetchUsers"
-    />
-
-    <!-- Main Table Container -->
-    <div v-else class="bg-white border border-[#e7e5e1] rounded-lg overflow-hidden">
-      <!-- Loading Skeleton -->
-      <div v-if="isLoading" class="p-6">
-        <LoadingSkeleton :rows="6" />
-      </div>
-
-      <!-- Empty State -->
-      <EmptyState
-        v-else-if="users.length === 0"
-        title="No users found"
-        description="No user accounts matched your search or role filter criteria."
-      />
-
-      <!-- Table View -->
-      <div v-else class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="border-b border-[#e7e5e1] bg-neutral-50/75 text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">
-              <th class="py-3 px-4 w-16">ID</th>
-              <th class="py-3 px-4">Name</th>
-              <th class="py-3 px-4">Email</th>
-              <th class="py-3 px-4">Assigned Role</th>
-              <th class="py-3 px-4">Created Date</th>
-              <th class="py-3 px-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-[#e7e5e1] text-xs">
-            <tr
-              v-for="user in users"
-              :key="user.id"
-              class="hover:bg-neutral-50/50 transition-colors"
-            >
-              <td class="py-3 px-4 font-mono text-neutral-500 font-medium">#{{ user.id }}</td>
-              <td class="py-3 px-4 font-medium text-neutral-900">
-                {{ user.name }}
-              </td>
-              <td class="py-3 px-4 text-neutral-600">
-                <div class="flex items-center space-x-1.5">
-                  <span>{{ user.email }}</span>
-                  <span
-                    v-if="user.email_verified_at"
-                    title="Verified Email"
-                    class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"
-                  ></span>
-                </div>
-              </td>
-              <td class="py-3 px-4">
-                <span
-                  class="inline-block px-2 py-0.5 text-[11px] font-semibold rounded"
-                  :class="getRoleBadgeClass(user.role?.name)"
-                >
-                  {{ user.role?.display_name || user.role?.name || 'Customer' }}
-                </span>
-              </td>
-              <td class="py-3 px-4 text-neutral-500">
-                {{ formatDate(user.created_at) }}
-              </td>
-              <td class="py-3 px-4 text-right space-x-1.5">
-                <button
-                  @click="openDetailModal(user)"
-                  type="button"
-                  class="px-2.5 py-1 text-neutral-700 bg-neutral-100 hover:bg-neutral-200 font-medium rounded text-[11px] transition-colors"
-                >
-                  View
-                </button>
-                <button
-                  @click="openEditModal(user)"
-                  type="button"
-                  class="px-2.5 py-1 text-white bg-[#f25c05] hover:bg-[#dc5202] font-medium rounded text-[11px] transition-colors"
-                >
-                  Edit
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination -->
-      <TablePagination
-        v-if="meta"
-        :meta="meta"
-        :disabled="isLoading"
-        @change-page="handlePageChange"
-      />
-    </div>
-
-    <!-- User Detail Modal -->
-    <BaseModal
-      :is-open="detailModalOpen"
-      title="User Account Details"
-      @close="detailModalOpen = false"
-    >
-      <div v-if="selectedUser" class="space-y-4 text-xs">
-        <div class="grid grid-cols-2 gap-3 p-3 bg-neutral-50 rounded-md border border-neutral-200">
-          <div>
-            <div class="text-[11px] text-neutral-500 font-medium">User ID</div>
-            <div class="font-mono text-neutral-900 mt-0.5">#{{ selectedUser.id }}</div>
+  <div class="space-y-6 select-none text-neutral-900">
+    <!-- Top Header matching Figma -->
+    <div>
+      <div class="flex items-start justify-between">
+        <div>
+          <h1 class="text-[24px] font-bold text-neutral-950 tracking-tight leading-tight">
+            Users
+          </h1>
+          <p class="text-xs text-neutral-500 mt-1 font-normal">
+            Manage registered VYBES users.
+          </p>
+        </div>
+        <div class="text-right">
+          <div class="text-xs font-bold text-neutral-950 leading-tight">
+            {{ adminDisplayName }}
           </div>
-          <div>
-            <div class="text-[11px] text-neutral-500 font-medium">Role</div>
-            <div class="mt-0.5">
-              <span
-                class="inline-block px-2 py-0.5 text-[11px] font-semibold rounded"
-                :class="getRoleBadgeClass(selectedUser.role?.name)"
+          <div class="text-[11px] text-neutral-400 mt-0.5 font-normal">
+            {{ adminDisplayRole }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Subtle horizontal divider line under header -->
+      <div class="border-b border-[#e5e0d8] mt-5 mb-6"></div>
+    </div>
+
+    <!-- State 16: Network Error -->
+    <div
+      v-if="isNetworkError"
+      class="max-w-md mx-auto my-20 p-8 bg-[#f7f5f0] border border-[#d8d3c8] rounded-md text-center"
+    >
+      <h3 class="text-sm font-bold text-neutral-900 mb-1">Unable to load users</h3>
+      <p class="text-xs text-neutral-500 mb-6 font-normal">Check your connection and try again.</p>
+      <button
+        @click="fetchUsers"
+        type="button"
+        class="px-6 py-2.5 bg-[#d85c35] hover:bg-[#c44f2b] text-white text-xs font-semibold rounded transition-colors cursor-pointer"
+      >
+        Try Again
+      </button>
+    </div>
+
+    <!-- State 18: Session Expired -->
+    <div
+      v-else-if="isSessionExpired"
+      class="max-w-md mx-auto my-20 p-8 bg-[#f7f5f0] border border-[#d8d3c8] rounded-md text-center"
+    >
+      <h3 class="text-sm font-bold text-neutral-900 mb-1">Session expired</h3>
+      <p class="text-xs text-neutral-500 mb-6 font-normal">Please sign in again to continue.</p>
+      <button
+        @click="handleSignOut"
+        type="button"
+        class="px-6 py-2.5 bg-[#d85c35] hover:bg-[#c44f2b] text-white text-xs font-semibold rounded transition-colors cursor-pointer"
+      >
+        Sign In Again
+      </button>
+    </div>
+
+    <!-- State 19: Access Denied -->
+    <div
+      v-else-if="isAccessDenied"
+      class="max-w-md mx-auto my-20 p-8 bg-[#f7f5f0] border border-[#d8d3c8] rounded-md text-center"
+    >
+      <h3 class="text-sm font-bold text-neutral-900 mb-1">Access denied</h3>
+      <p class="text-xs text-neutral-500 mb-6 font-normal">You do not have permission to manage users.</p>
+      <button
+        @click="handleGoBack"
+        type="button"
+        class="px-6 py-2.5 bg-[#d85c35] hover:bg-[#c44f2b] text-white text-xs font-semibold rounded transition-colors cursor-pointer"
+      >
+        Back
+      </button>
+    </div>
+
+    <!-- Main Content: Controls, Table & Pagination -->
+    <div v-else class="space-y-6">
+      <!-- Search & Registered Users Count Bar -->
+      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <!-- Search Input -->
+        <div class="w-full sm:max-w-sm">
+          <label for="users-search-input" class="block text-xs font-semibold text-neutral-900 mb-1.5">
+            Search users
+          </label>
+          <div class="relative">
+            <svg
+              class="w-4 h-4 text-neutral-400 absolute left-3 top-2.5 pointer-events-none"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <input
+              id="users-search-input"
+              v-model="searchQuery"
+              @input="handleSearchInput"
+              @keyup.enter="executeSearch"
+              type="text"
+              placeholder="Search users"
+              class="w-full text-xs pl-9 pr-8 py-2 bg-white border border-[#d8d3c8] rounded text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-[#d85c35] transition-colors"
+            />
+            <button
+              v-if="searchQuery"
+              @click="clearSearch"
+              type="button"
+              class="absolute right-2.5 top-2 text-neutral-400 hover:text-neutral-700 text-xs px-1 cursor-pointer"
+              title="Clear search"
+            >
+              ✕
+            </button>
+          </div>
+          <p class="text-[11px] text-neutral-400 mt-1 font-normal">
+            Search by name, email, or phone number.
+          </p>
+        </div>
+
+        <!-- Total Registered Users Counter -->
+        <div class="text-right flex-shrink-0">
+          <div class="text-lg font-bold text-neutral-950 leading-tight">
+            {{ formattedTotalUsers }} users
+          </div>
+          <div class="text-[11px] text-neutral-400 mt-0.5 font-normal">
+            Registered users
+          </div>
+        </div>
+      </div>
+
+      <!-- Table Surface -->
+      <div class="bg-white border border-[#e5e0d8] rounded-none sm:rounded overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-[#e5e0d8] text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">
+                <th class="py-3 px-6 font-medium">User</th>
+                <th class="py-3 px-6 font-medium">Email</th>
+                <th class="py-3 px-6 font-medium">Phone</th>
+                <th class="py-3 px-6 font-medium">Status</th>
+                <th class="py-3 px-6 font-medium">Registered</th>
+                <th class="py-3 px-6 font-medium text-right">Action</th>
+              </tr>
+            </thead>
+
+            <!-- State 14: Loading Skeleton Rows -->
+            <tbody v-if="isLoading" class="divide-y divide-[#eeeae4] text-xs">
+              <tr v-for="i in 4" :key="'skeleton-' + i" class="animate-pulse">
+                <td class="py-4 px-6">
+                  <div class="h-3.5 bg-neutral-200 rounded w-28"></div>
+                </td>
+                <td class="py-4 px-6">
+                  <div class="h-3.5 bg-neutral-200 rounded w-44"></div>
+                </td>
+                <td class="py-4 px-6">
+                  <div class="h-3.5 bg-neutral-200 rounded w-24"></div>
+                </td>
+                <td class="py-4 px-6">
+                  <div class="h-5 bg-neutral-200 rounded w-16"></div>
+                </td>
+                <td class="py-4 px-6">
+                  <div class="h-3.5 bg-neutral-200 rounded w-20"></div>
+                </td>
+                <td class="py-4 px-6 text-right">
+                  <div class="h-3.5 bg-neutral-200 rounded w-10 ml-auto"></div>
+                </td>
+              </tr>
+            </tbody>
+
+            <!-- State 03 & 20: Empty States -->
+            <tbody v-else-if="users.length === 0">
+              <tr>
+                <td colspan="6" class="py-16 px-6 text-center">
+                  <!-- State 03: Search No Results -->
+                  <div v-if="activeSearch">
+                    <h3 class="text-sm font-bold text-neutral-900 mb-1">No users found</h3>
+                    <p class="text-xs text-neutral-400 font-normal">
+                      For a different name, email, or phone number.
+                    </p>
+                  </div>
+                  <!-- State 20: Complete Empty State -->
+                  <div v-else>
+                    <h3 class="text-sm font-bold text-neutral-900 mb-1">No users yet</h3>
+                    <p class="text-xs text-neutral-400 font-normal">
+                      Registered users will appear here.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+
+            <!-- State 01 & 02: Populated Table Rows -->
+            <tbody v-else class="divide-y divide-[#eeeae4] text-xs">
+              <tr
+                v-for="user in users"
+                :key="user.id"
+                class="hover:bg-[#faf8f5] transition-colors"
               >
-                {{ selectedUser.role?.display_name || selectedUser.role?.name }}
-              </span>
-            </div>
-          </div>
-          <div>
-            <div class="text-[11px] text-neutral-500 font-medium">Full Name</div>
-            <div class="font-medium text-neutral-900 mt-0.5">{{ selectedUser.name }}</div>
-          </div>
-          <div>
-            <div class="text-[11px] text-neutral-500 font-medium">Email Address</div>
-            <div class="font-mono text-neutral-900 mt-0.5">{{ selectedUser.email }}</div>
-          </div>
-          <div>
-            <div class="text-[11px] text-neutral-500 font-medium">Registered At</div>
-            <div class="text-neutral-700 mt-0.5">{{ formatDateTime(selectedUser.created_at) }}</div>
-          </div>
-          <div>
-            <div class="text-[11px] text-neutral-500 font-medium">Email Verified At</div>
-            <div class="text-neutral-700 mt-0.5">{{ selectedUser.email_verified_at ? formatDateTime(selectedUser.email_verified_at) : 'Unverified' }}</div>
-          </div>
-        </div>
+                <!-- User Name -->
+                <td class="py-4 px-6 font-bold text-neutral-950">
+                  {{ user.name }}
+                </td>
 
-        <!-- Associated Merchant Profile -->
-        <div v-if="selectedUser.merchant" class="p-3 border border-neutral-200 rounded-md">
-          <div class="text-[11px] font-semibold text-neutral-900 uppercase tracking-wider mb-2">Merchant Profile</div>
-          <div class="grid grid-cols-2 gap-2 text-neutral-700">
-            <div><span class="text-neutral-400">Business Name:</span> {{ selectedUser.merchant.business_name }}</div>
-            <div><span class="text-neutral-400">Status:</span> {{ selectedUser.merchant.status }}</div>
-          </div>
-        </div>
+                <!-- Email -->
+                <td class="py-4 px-6 text-neutral-600 font-normal">
+                  {{ user.email }}
+                </td>
 
-        <!-- Associated Organizer Profile -->
-        <div v-if="selectedUser.organizer" class="p-3 border border-neutral-200 rounded-md">
-          <div class="text-[11px] font-semibold text-neutral-900 uppercase tracking-wider mb-2">Organizer Profile</div>
-          <div class="grid grid-cols-2 gap-2 text-neutral-700">
-            <div><span class="text-neutral-400">Organization Name:</span> {{ selectedUser.organizer.organization_name }}</div>
-            <div><span class="text-neutral-400">Status:</span> {{ selectedUser.organizer.status }}</div>
-          </div>
-        </div>
+                <!-- Phone (Masked) -->
+                <td class="py-4 px-6 text-neutral-600 font-mono text-[11px]">
+                  {{ maskPhoneNumber(user.phone) }}
+                </td>
 
-        <!-- Permissions List -->
-        <div v-if="selectedUser.role?.permissions && selectedUser.role.permissions.length > 0" class="space-y-1.5">
-          <div class="text-[11px] font-semibold text-neutral-700 uppercase tracking-wider">Granted Role Permissions</div>
-          <div class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-2 bg-neutral-50 rounded border border-neutral-200">
-            <span
-              v-for="perm in selectedUser.role.permissions"
-              :key="perm.id"
-              class="px-2 py-0.5 bg-white border border-neutral-200 rounded text-[10px] text-neutral-700 font-mono"
-            >
-              {{ perm.name }}
-            </span>
-          </div>
+                <!-- Status Badge -->
+                <td class="py-4 px-6">
+                  <span
+                    v-if="user.status === 'suspended'"
+                    class="bg-[#fdeeed] text-[#d32f2f] px-2.5 py-0.5 rounded text-[11px] font-medium inline-block"
+                  >
+                    Suspended
+                  </span>
+                  <span
+                    v-else
+                    class="bg-[#edf7ed] text-[#2e7d32] px-2.5 py-0.5 rounded text-[11px] font-medium inline-block"
+                  >
+                    Active
+                  </span>
+                </td>
+
+                <!-- Registration Date -->
+                <td class="py-4 px-6 text-neutral-600 font-normal">
+                  {{ formatDate(user.created_at) }}
+                </td>
+
+                <!-- Action: View -->
+                <td class="py-4 px-6 text-right">
+                  <router-link
+                    :to="'/admin/users/' + user.id"
+                    class="text-neutral-950 font-bold hover:underline cursor-pointer text-xs"
+                  >
+                    View
+                  </router-link>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <template #footer>
-        <button
-          @click="detailModalOpen = false"
-          type="button"
-          class="px-3.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-medium rounded-md transition-colors"
-        >
-          Close
-        </button>
-      </template>
-    </BaseModal>
-
-    <!-- Edit User Modal -->
-    <BaseModal
-      :is-open="editModalOpen"
-      title="Edit User Account"
-      @close="closeEditModal"
-    >
-      <form @submit.prevent="submitUserUpdate" class="space-y-3.5 text-xs">
-        <!-- Backend Feedback Banner -->
-        <div v-if="editError" class="p-2.5 bg-red-50 border border-red-200 rounded text-red-700 text-xs">
-          {{ editError }}
-        </div>
-
-        <!-- Name Field -->
+      <!-- State 21: Server-Side Pagination & Record Excerpt -->
+      <div
+        v-if="!isLoading && users.length > 0"
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-neutral-500 pt-1"
+      >
+        <!-- Left: Records Excerpt -->
         <div>
-          <label for="edit-user-name" class="block font-medium text-neutral-700 mb-1">Full Name</label>
-          <input
-            id="edit-user-name"
-            v-model="editForm.name"
-            type="text"
-            required
-            maxlength="100"
-            class="w-full text-xs px-3 py-1.5 border border-neutral-300 rounded-md focus:outline-none focus:border-[#f25c05]"
-            :class="{ 'border-red-400': validationErrors.name }"
-          />
-          <p v-if="validationErrors.name" class="text-[11px] text-red-600 mt-1">
-            {{ validationErrors.name[0] }}
-          </p>
+          <span v-if="activeSearch">
+            {{ users.length }} {{ users.length === 1 ? 'result' : 'results' }}
+          </span>
+          <span v-else>
+            {{ excerptText }}
+          </span>
         </div>
 
-        <!-- Email Field -->
-        <div>
-          <label for="edit-user-email" class="block font-medium text-neutral-700 mb-1">Email Address</label>
-          <input
-            id="edit-user-email"
-            v-model="editForm.email"
-            type="email"
-            required
-            maxlength="255"
-            class="w-full text-xs px-3 py-1.5 border border-neutral-300 rounded-md focus:outline-none focus:border-[#f25c05]"
-            :class="{ 'border-red-400': validationErrors.email }"
-          />
-          <p v-if="validationErrors.email" class="text-[11px] text-red-600 mt-1">
-            {{ validationErrors.email[0] }}
-          </p>
-        </div>
-
-        <!-- Role Select -->
-        <div>
-          <label for="edit-user-role" class="block font-medium text-neutral-700 mb-1">Assigned Role</label>
-          <select
-            id="edit-user-role"
-            v-model="editForm.role_id"
-            class="w-full text-xs px-3 py-1.5 border border-neutral-300 rounded-md focus:outline-none focus:border-[#f25c05] bg-white text-neutral-800"
-            :class="{ 'border-red-400': validationErrors.role_id }"
-          >
-            <option :value="1">Customer</option>
-            <option :value="2">Merchant</option>
-            <option :value="3">Event Organizer</option>
-            <option :value="4">Administrator</option>
-          </select>
-          <p v-if="validationErrors.role_id" class="text-[11px] text-red-600 mt-1">
-            {{ validationErrors.role_id[0] }}
-          </p>
-        </div>
-
-        <!-- Modal Footer Actions -->
-        <div class="pt-3 border-t border-neutral-200 flex justify-end space-x-2">
+        <!-- Right: Pagination Buttons -->
+        <div class="flex items-center space-x-1.5">
+          <!-- Previous Button -->
           <button
-            @click="closeEditModal"
-            :disabled="isSubmitting"
+            @click="changePage(currentPage - 1)"
+            :disabled="currentPage <= 1 || isLoading"
             type="button"
-            class="px-3.5 py-1.5 border border-neutral-300 hover:bg-neutral-100 disabled:opacity-50 text-neutral-700 text-xs font-medium rounded-md transition-colors"
+            class="px-3 py-1.5 text-xs text-neutral-700 bg-white border border-[#d8d3c8] rounded hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
           >
-            Cancel
+            Previous
           </button>
+
+          <!-- Page Numbers -->
           <button
-            :disabled="isSubmitting"
-            type="submit"
-            class="px-3.5 py-1.5 bg-[#f25c05] hover:bg-[#dc5202] disabled:opacity-50 text-white text-xs font-medium rounded-md transition-colors flex items-center space-x-1.5"
+            v-for="page in visiblePages"
+            :key="'page-' + page"
+            @click="changePage(page)"
+            :disabled="isLoading"
+            type="button"
+            class="px-3 py-1.5 text-xs rounded transition-colors cursor-pointer"
+            :class="
+              page === currentPage
+                ? 'bg-[#d85c35] text-white font-semibold'
+                : 'bg-white border border-[#d8d3c8] text-neutral-700 hover:bg-neutral-50'
+            "
           >
-            <span v-if="isSubmitting" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            <span>Save Changes</span>
+            {{ page }}
+          </button>
+
+          <!-- Next Button -->
+          <button
+            @click="changePage(currentPage + 1)"
+            :disabled="currentPage >= totalPages || isLoading"
+            type="button"
+            class="px-3 py-1.5 text-xs text-neutral-700 bg-white border border-[#d8d3c8] rounded hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+          >
+            Next
           </button>
         </div>
-      </form>
-    </BaseModal>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../../stores/auth'
 import userService from '../../services/user.service'
-import { formatDate, formatDateTime } from '../../utils/formatters'
-import TablePagination from '../../components/tables/TablePagination.vue'
-import LoadingSkeleton from '../../components/feedback/LoadingSkeleton.vue'
-import EmptyState from '../../components/feedback/EmptyState.vue'
-import ErrorState from '../../components/feedback/ErrorState.vue'
-import BaseModal from '../../components/overlays/BaseModal.vue'
+import { formatDate, maskPhoneNumber } from '../../utils/formatters'
 
+const router = useRouter()
+const authStore = useAuthStore()
+
+// State
 const users = ref([])
 const meta = ref(null)
 const isLoading = ref(true)
-const error = ref(null)
+const isNetworkError = ref(false)
+const isSessionExpired = ref(false)
+const isAccessDenied = ref(false)
 
-const filters = reactive({
-  search: '',
-  role: '',
-  page: 1,
-  per_page: 15,
+const searchQuery = ref('')
+const activeSearch = ref('')
+const currentPage = ref(1)
+const perPage = ref(15)
+
+// Debounce timer for search
+let searchDebounceTimer = null
+
+// Display admin header info
+const adminDisplayName = computed(() => {
+  return authStore.user?.name || 'Admin'
 })
 
-// Modals
-const detailModalOpen = ref(false)
-const selectedUser = ref(null)
-
-const editModalOpen = ref(false)
-const isSubmitting = ref(false)
-const editError = ref(null)
-const validationErrors = ref({})
-const editForm = reactive({
-  id: null,
-  name: '',
-  email: '',
-  role_id: 1,
+const adminDisplayRole = computed(() => {
+  return authStore.user?.role?.display_name || 'Administrator'
 })
 
-function getRoleBadgeClass(roleName) {
-  switch (roleName?.toLowerCase()) {
-    case 'admin':
-      return 'bg-purple-50 text-purple-700 border border-purple-200'
-    case 'merchant':
-      return 'bg-blue-50 text-blue-700 border border-blue-200'
-    case 'organizer':
-      return 'bg-amber-50 text-amber-700 border border-amber-200'
-    default:
-      return 'bg-neutral-100 text-neutral-700 border border-neutral-200'
+// Registered users total count formatting
+const formattedTotalUsers = computed(() => {
+  const total = meta.value?.total ?? 0
+  return new Intl.NumberFormat('en-US').format(total)
+})
+
+// Excerpt text matching Figma e.g. "4 of 2,840 · Example excerpt"
+const excerptText = computed(() => {
+  const total = meta.value?.total ?? users.value.length
+  const currentCount = users.value.length
+  const formattedTotal = new Intl.NumberFormat('en-US').format(total)
+  return `${currentCount} of ${formattedTotal} · Example excerpt`
+})
+
+// Total pages from server meta
+const totalPages = computed(() => {
+  return meta.value?.last_page || 1
+})
+
+// Visible page numbers for pagination controls
+const visiblePages = computed(() => {
+  const total = totalPages.value
+  const current = currentPage.value
+  const pages = []
+
+  const maxButtons = 5
+  let start = Math.max(1, current - 2)
+  let end = Math.min(total, start + maxButtons - 1)
+
+  if (end - start + 1 < maxButtons) {
+    start = Math.max(1, end - maxButtons + 1)
   }
-}
 
+  for (let p = start; p <= end; p++) {
+    pages.push(p)
+  }
+
+  return pages
+})
+
+// Fetch users from API
 async function fetchUsers() {
   isLoading.value = true
-  error.value = null
+  isNetworkError.value = false
+  isSessionExpired.value = false
+  isAccessDenied.value = false
+
   try {
     const params = {
-      page: filters.page,
-      per_page: filters.per_page,
+      page: currentPage.value,
+      per_page: perPage.value,
     }
-    if (filters.search.trim()) {
-      params.search = filters.search.trim()
-    }
-    if (filters.role) {
-      params.role = filters.role
+
+    if (activeSearch.value.trim()) {
+      params.search = activeSearch.value.trim()
     }
 
     const response = await userService.list(params)
     users.value = response.data || []
     meta.value = response.meta || null
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to retrieve users from backend.'
+    const status = err.response?.status
+    if (status === 401) {
+      isSessionExpired.value = true
+    } else if (status === 403) {
+      isAccessDenied.value = true
+    } else {
+      isNetworkError.value = true
+    }
   } finally {
     isLoading.value = false
   }
 }
 
-function handleSearch() {
-  filters.page = 1
+// Search input handling
+function handleSearchInput() {
+  clearTimeout(searchDebounceTimer)
+  searchDebounceTimer = setTimeout(() => {
+    executeSearch()
+  }, 400)
+}
+
+function executeSearch() {
+  activeSearch.value = searchQuery.value
+  currentPage.value = 1
   fetchUsers()
 }
 
-function resetFilters() {
-  filters.search = ''
-  filters.role = ''
-  filters.page = 1
+function clearSearch() {
+  searchQuery.value = ''
+  activeSearch.value = ''
+  currentPage.value = 1
   fetchUsers()
 }
 
-function handlePageChange(newPage) {
-  filters.page = newPage
+function changePage(page) {
+  if (page < 1 || page > totalPages.value || page === currentPage.value) return
+  currentPage.value = page
   fetchUsers()
 }
 
-async function openDetailModal(user) {
+function handleGoBack() {
+  router.push('/admin/dashboard')
+}
+
+async function handleSignOut() {
   try {
-    const fullUser = await userService.get(user.id)
-    selectedUser.value = fullUser
-  } catch {
-    selectedUser.value = user
-  }
-  detailModalOpen.value = true
-}
-
-function openEditModal(user) {
-  editForm.id = user.id
-  editForm.name = user.name
-  editForm.email = user.email
-  editForm.role_id = user.role_id || (user.role?.id ?? 1)
-  validationErrors.value = {}
-  editError.value = null
-  editModalOpen.value = true
-}
-
-function closeEditModal() {
-  if (isSubmitting.value) return
-  editModalOpen.value = false
-}
-
-async function submitUserUpdate() {
-  isSubmitting.value = true
-  editError.value = null
-  validationErrors.value = {}
-
-  try {
-    const payload = {
-      name: editForm.name,
-      email: editForm.email,
-      role_id: Number(editForm.role_id),
-    }
-
-    await userService.update(editForm.id, payload)
-    editModalOpen.value = false
-    await fetchUsers()
-  } catch (err) {
-    if (err.response?.status === 422) {
-      validationErrors.value = err.response.data?.errors || {}
-      editError.value = err.response.data?.message || 'Validation failed. Please correct the fields.'
-    } else {
-      editError.value = err.response?.data?.message || 'Failed to update user account.'
-    }
+    await authStore.logout()
   } finally {
-    isSubmitting.value = false
+    router.push('/auth/login')
   }
 }
 

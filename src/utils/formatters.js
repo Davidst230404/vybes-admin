@@ -70,3 +70,20 @@ export function formatStatusLabel(status) {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
 }
+
+/**
+ * Mask phone number sensitive digits according to Figma design.
+ * e.g. "081234567821" -> "0812••••••21"
+ *
+ * @param {string|null} phone
+ * @returns {string}
+ */
+export function maskPhoneNumber(phone) {
+  if (!phone) return '-'
+  const cleaned = String(phone).replace(/\s+/g, '')
+  if (cleaned.length < 6) return cleaned
+  const start = cleaned.slice(0, 4)
+  const end = cleaned.slice(-2)
+  return `${start}••••••${end}`
+}
+
